@@ -1,0 +1,37 @@
+---
+# tasks file for lighthouse-role
+- name: Install git
+  become: true
+  ansible.builtin.yum:
+    name: git
+
+- name: Set owner lighthouse path dir
+  become: true
+  file:
+    path: "{{ lighthouse_path }}"
+    owner: nginx
+    group: nginx
+    recurse: true
+    state: directory
+    access_time: preserve
+    modification_time: preserve
+
+- name: Git clone lighthouse
+  become: true
+  become_user: nginx
+  git:
+    repo: "{{ lighthouse_git }}"
+    version: "{{ lighthouse_version }}"
+    dest: "{{ lighthouse_path }}{{ lighthouse_dir }}"
+
+- name: Create ligthouse.conf
+  become: true
+  template:
+    src: templates/lighthouse.conf.j2
+    dest: /etc/nginx/conf.d/lighthouse.conf
+    mode: 0644
+  notify: Reload nginx service
+
+- name: Print IP address vector1
+  debug:
+    msg: "Адрес ноды с установленным vector: {{ vector_node_ip }}"
